@@ -7,20 +7,17 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'Flutter Demo',
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -35,9 +32,54 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  Widget _buildPageView() {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: Center(
+        child: PageControllerProvider(
+          pageController: _controller,
+          child: LayoutBuilder(builder: (context, constraints) {
+            if (constraints.maxWidth < 600) {
+              return const PageViewComponent();
+            } else {
+              return Container(child: const PageViewComponent());
+            }
+          }),
+        ),
+      ),
+    );
+  }
+}
+
+class PageControllerProvider extends InheritedWidget {
+  final PageController pageController;
+
+  const PageControllerProvider({
+    super.key,
+    required this.pageController,
+    required super.child,
+  });
+
+  static PageController? of(BuildContext context) {
+    final PageControllerProvider? result =
+        context.dependOnInheritedWidgetOfExactType<PageControllerProvider>();
+    return result?.pageController;
+  }
+
+  @override
+  bool updateShouldNotify(PageControllerProvider oldWidget) {
+    return oldWidget.pageController != pageController;
+  }
+}
+
+class PageViewComponent extends StatelessWidget {
+  const PageViewComponent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     return PageView(
-      controller: _controller,
+      controller: PageControllerProvider.of(context),
       children: [
         Container(
           color: Colors.red,
@@ -49,24 +91,6 @@ class _MyHomePageState extends State<MyHomePage> {
           color: Colors.blue,
         ),
       ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: Center(
-        child: LayoutBuilder(builder: (context, constraints) {
-          if (constraints.maxWidth < 600) {
-            return _buildPageView();
-          } else {
-            return Container(
-              child: _buildPageView(),
-            );
-          }
-        }),
-      ),
     );
   }
 }
